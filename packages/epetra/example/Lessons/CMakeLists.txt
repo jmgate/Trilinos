@@ -8,3 +8,4 @@ ADD_SUBDIRECTORY(Lesson03-Power-Method)
 # and testing, please add that subdirectory here.
 
 ADD_SUBDIRECTORY(Lesson05-Redistribution)
+ADD_SUBDIRECTORY(one-big-crs-matrix)
