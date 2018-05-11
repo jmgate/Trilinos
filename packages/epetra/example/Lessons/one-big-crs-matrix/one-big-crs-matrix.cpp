@@ -45,6 +45,7 @@ main(
   using std::size_t;
   using std::stringstream;
   using std::vector;
+  const int delay(1);
 
   MPI_Init(&argc, &argv);
   Epetra_MpiComm comm(MPI_COMM_WORLD);
@@ -168,8 +169,12 @@ main(
   if (myRank == 0)
     cout << endl << "-----[ A00 ]---------------------------------------------"
          << endl << endl;
-  A00.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      A00.Print(cout);
+  }
+  sleep(delay);
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -183,8 +188,12 @@ main(
   if (myRank == 0)
     cout << endl << "-----[ A01 ]---------------------------------------------"
          << endl << endl;
-  A01.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      A01.Print(cout);
+  }
+  sleep(delay);
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -199,8 +208,12 @@ main(
   if (myRank == 0)
     cout << endl << "-----[ A10 ]---------------------------------------------"
          << endl << endl;
-  A10.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      A10.Print(cout);
+  }
+  sleep(delay);
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -215,8 +228,12 @@ main(
   if (myRank == 0)
     cout << endl << "-----[ A11 ]---------------------------------------------"
          << endl << endl;
-  A11.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      A11.Print(cout);
+  }
+  sleep(delay);
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -234,55 +251,145 @@ main(
   if (myRank == 0)
     cout << endl << "-----[ rowMap ]------------------------------------------"
          << endl << endl;
-  rowMap.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      rowMap.Print(cout);
+  }
+  sleep(delay);
   if (myRank == 0)
     cout << endl << "-----[ colMap ]------------------------------------------"
          << endl << endl;
-  colMap.Print(cout);
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      colMap.Print(cout);
+  }
+  sleep(delay);
 
   // Get a vector of the global indices each processor owns in the rowMap.
   const int numMyRowMapElements(rowMap.NumMyElements());
   const int* rowMapGlobalElementsPtr(rowMap.MyGlobalElements());
   vector<int> myGlobalRowMapElements(rowMapGlobalElementsPtr,
     rowMapGlobalElementsPtr + numMyRowMapElements);
-  stringstream myGlobalRowMapElementsSS;
-  myGlobalRowMapElementsSS << "p" << myRank << ":  myGlobalRowMapElements = {";
+  stringstream ss;
+  ss << "p" << myRank << ":  myGlobalRowMapElements = {";
   for (size_t i(0); i < myGlobalRowMapElements.size(); ++i)
   {
-    myGlobalRowMapElementsSS << myGlobalRowMapElements[i];
+    ss << myGlobalRowMapElements[i];
     if (i < myGlobalRowMapElements.size() - 1)
-      myGlobalRowMapElementsSS << ", ";
+      ss << ", ";
   }
-  myGlobalRowMapElementsSS << "} (size = " << myGlobalRowMapElements.size()
-    << ")" << endl;
+  ss << "} (size = " << myGlobalRowMapElements.size() << ")" << endl;
   if (myRank == 0)
     cout << endl << "-----[ rowMap ]------------------------------------------"
          << endl << endl;
-  cout << myGlobalRowMapElementsSS.str();
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
 
   // Get a vector of the global indices each processor owns in the colMap.
   const int numMyColMapElements(colMap.NumMyElements());
   const int* colMapGlobalElementsPtr(colMap.MyGlobalElements());
   vector<int> myGlobalColMapElements(colMapGlobalElementsPtr,
     colMapGlobalElementsPtr + numMyColMapElements);
-  stringstream myGlobalColMapElementsSS;
-  myGlobalColMapElementsSS << "p" << myRank << ":  myGlobalColMapElements = {";
+  ss = stringstream("");
+  ss << "p" << myRank << ":  myGlobalColMapElements = {";
   for (size_t i(0); i < myGlobalColMapElements.size(); ++i)
   {
-    myGlobalColMapElementsSS << myGlobalColMapElements[i];
+    ss << myGlobalColMapElements[i];
     if (i < myGlobalColMapElements.size() - 1)
-      myGlobalColMapElementsSS << ", ";
+      ss << ", ";
   }
-  myGlobalColMapElementsSS << "} (size = " << myGlobalColMapElements.size()
-    << ")" << endl;
+  ss << "} (size = " << myGlobalColMapElements.size() << ")" << endl;
   if (myRank == 0)
     cout << endl << "-----[ colMap ]------------------------------------------"
          << endl << endl;
-  cout << myGlobalColMapElementsSS.str();
-  sleep(1);
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+
+  // Append the extra rows and columns to the list on processor 0.
+  if (myRank == 0)
+  {
+    for (int i(0); i < newM; ++i)
+    {
+      myGlobalRowMapElements.push_back(newN + i);
+      myGlobalColMapElements.push_back(newN + i);
+    }
+  }
+  ss = stringstream("");
+  ss << "p" << myRank << ":  myGlobalRowMapElements = {";
+  for (size_t i(0); i < myGlobalRowMapElements.size(); ++i)
+  {
+    ss << myGlobalRowMapElements[i];
+    if (i < myGlobalRowMapElements.size() - 1)
+      ss << ", ";
+  }
+  ss << "} (size = " << myGlobalRowMapElements.size() << ")" << endl;
+  if (myRank == 0)
+    cout << endl << "-----[ rowMap ]------------------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+  ss = stringstream("");
+  ss << "p" << myRank << ":  myGlobalColMapElements = {";
+  for (size_t i(0); i < myGlobalColMapElements.size(); ++i)
+  {
+    ss << myGlobalColMapElements[i];
+    if (i < myGlobalColMapElements.size() - 1)
+      ss << ", ";
+  }
+  ss << "} (size = " << myGlobalColMapElements.size() << ")" << endl;
+  if (myRank == 0)
+    cout << endl << "-----[ colMap ]------------------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+
+  // Create the new row and column maps.
+  Epetra_Map newRowMap(-1, myGlobalRowMapElements.size(),
+    myGlobalRowMapElements.data(), indexBase, comm);
+  Epetra_Map newColMap(-1, myGlobalColMapElements.size(),
+    myGlobalColMapElements.data(), indexBase, comm);
+  if (myRank == 0)
+    cout << endl << "-----[ newRowMap ]---------------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      newRowMap.Print(cout);
+  }
+  sleep(delay);
+  if (myRank == 0)
+    cout << endl << "-----[ newColMap ]---------------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      newColMap.Print(cout);
+  }
+  sleep(delay);
+
+  // Need to figure out const int* numEntriesPerRow.
+  // Loop over the local rows of A00
+  // ExtractGlobalRowCopy(int GlobalRow, int Length, int& NumEntries, double* Values, int* Indices)
+
+  // Epetra_CrsMatrix A(Copy, newRowMap, newColMap, const int* numEntriesPerRow, true);
 
   /////////////////////////////////////////////////////////////////////////////
   //
