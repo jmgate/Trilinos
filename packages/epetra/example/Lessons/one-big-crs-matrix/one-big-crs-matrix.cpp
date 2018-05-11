@@ -73,26 +73,9 @@ main(
   const int n(5), m(2), indexBase(0);
   Epetra_Map nMap(n, indexBase, comm);
 
-  // Get the list of global indices that this process owns.  In this
-  // example, this is unnecessary, because we know that we created a
-  // contiguous Map (see above).  (Thus, we really only need the min
-  // and max global index on this process.)  However, in general, we
-  // don't know what global indices the Map owns, so if we plan to add
-  // entries into the sparse matrix using global indices, we have to
-  // get the list of global indices this process owns.
+  // Get the list of global indices that this process owns.
   const int numMyElements(nMap.NumMyElements());
-  int* myGlobalElements(NULL);
-  myGlobalElements = nMap.MyGlobalElements();
-
-  // In general, tests like this really should synchronize across all
-  // processes.  However, the likely cause for this case is a
-  // misconfiguration of Epetra, so we expect it to happen on all
-  // processes, if it happens at all.
-  if (numMyElements > 0 && myGlobalElements == NULL)
-    throw std::logic_error("Failed to get the list of global indices");
-
-  if (myRank == 0)
-    cout << endl << "Creating the sparse matrix" << endl;
+  int* myGlobalElements(nMap.MyGlobalElements());
 
   // Create a Epetra sparse matrix whose rows have distribution given
   // by the Map.  The max number of entries per row is 3.
@@ -385,9 +368,94 @@ main(
   }
   sleep(delay);
 
-  // Need to figure out const int* numEntriesPerRow.
-  // Loop over the local rows of A00
-  // ExtractGlobalRowCopy(int GlobalRow, int Length, int& NumEntries, double* Values, int* Indices)
+  // Need to figure out the number of entries per row from A00.
+  Epetra_CrsGraph graph(A00.Graph());
+  const int numLocalRows(rowMap.NumMyElements());
+  vector<int> numEntriesPerRow(numLocalRows);
+  for (int i(0); i < numLocalRows; ++i)
+    numEntriesPerRow[i] = graph.NumMyIndices(i);
+  ss = stringstream("");
+  ss << "p" << myRank << ":  numEntriesPerRow = {";
+  for (size_t i(0); i < numEntriesPerRow.size(); ++i)
+  {
+    ss << numEntriesPerRow[i];
+    if (i < numEntriesPerRow.size() - 1)
+      ss << ", ";
+  }
+  ss << "} (size = " << numEntriesPerRow.size() << ")" << endl;
+  if (myRank == 0)
+    cout << endl << "-----[ numEntriesPerRow ]--------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+
+  // Add the number of entries per row from A01.
+  for (int i(0); i < A01.NumVectors(); ++i)
+    for (int j(0); j < numLocalRows; ++j)
+      if (A01[i][j] != 0)
+        ++numEntriesPerRow[j];
+  ss = stringstream("");
+  ss << "p" << myRank << ":  numEntriesPerRow = {";
+  for (size_t i(0); i < numEntriesPerRow.size(); ++i)
+  {
+    ss << numEntriesPerRow[i];
+    if (i < numEntriesPerRow.size() - 1)
+      ss << ", ";
+  }
+  ss << "} (size = " << numEntriesPerRow.size() << ")" << endl;
+  if (myRank == 0)
+    cout << endl << "-----[ numEntriesPerRow ]--------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+
+  /*
+  // Add the number of entries per row from A10.
+
+  // Add the number of entries per row from A11.
+  Epetra_BlockMap mapA11(A11.Map());
+  const int numMyA11Rows(mapA11.NumMyElements());
+  cout << "numMyA11Rows = " << numMyA11Rows << endl;
+  for (int i(0); i < A11.NumVectors(); ++i)
+  {
+    cout << "i = " << i << endl;
+    numEntriesPerRow.push_back(0);
+    for (int j(0); j < numMyA11Rows; ++j)
+    {
+      cout << "j = " << j << endl;
+      cout << "A11[i][j] = " << A11[i][j] << endl;
+      cout << "numLocalRows + j = " << numLocalRows + j << endl;
+      if (A11[i][j] != 0)
+        ++numEntriesPerRow[numLocalRows + j];
+    }
+  }
+  ss = stringstream("");
+  ss << "p" << myRank << ":  numEntriesPerRow = {";
+  for (size_t i(0); i < numEntriesPerRow.size(); ++i)
+  {
+    ss << numEntriesPerRow[i];
+    if (i < numEntriesPerRow.size() - 1)
+      ss << ", ";
+  }
+  ss << "} (size = " << numEntriesPerRow.size() << ")" << endl;
+  if (myRank == 0)
+    cout << endl << "-----[ numEntriesPerRow ]--------------------------------"
+         << endl << endl;
+  for (int i(0); i < numProcs; ++i)
+  {
+    if (myRank == i)
+      cout << ss.str();
+  }
+  sleep(delay);
+  */
 
   // Epetra_CrsMatrix A(Copy, newRowMap, newColMap, const int* numEntriesPerRow, true);
 
