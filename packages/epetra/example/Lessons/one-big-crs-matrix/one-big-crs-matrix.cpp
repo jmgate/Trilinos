@@ -231,7 +231,8 @@ main(
   const int newN(A00.NumGlobalRows()), newM(A01.NumVectors());
 
   // Then get the row and column maps from the 00 block.
-  Epetra_Map rowMap(A00.RowMap()), colMap(A00.ColMap());
+  Epetra_Map rowMap(A00.RowMap());
+//  Epetra_Map colMap(A00.ColMap());
   if (myRank == 0)
     cout << endl << "-----[ rowMap ]------------------------------------------"
          << endl << endl;
@@ -241,15 +242,15 @@ main(
       rowMap.Print(cout);
   }
   sleep(delay);
-  if (myRank == 0)
-    cout << endl << "-----[ colMap ]------------------------------------------"
-         << endl << endl;
-  for (int i(0); i < numProcs; ++i)
-  {
-    if (myRank == i)
-      colMap.Print(cout);
-  }
-  sleep(delay);
+//  if (myRank == 0)
+//    cout << endl << "-----[ colMap ]------------------------------------------"
+//         << endl << endl;
+//  for (int i(0); i < numProcs; ++i)
+//  {
+//    if (myRank == i)
+//      colMap.Print(cout);
+//  }
+//  sleep(delay);
 
   // Get a vector of the global indices each processor owns in the rowMap.
   const int numMyRowMapElements(rowMap.NumMyElements());
@@ -275,6 +276,7 @@ main(
   }
   sleep(delay);
 
+  /*
   // Get a vector of the global indices each processor owns in the colMap.
   const int numMyColMapElements(colMap.NumMyElements());
   const int* colMapGlobalElementsPtr(colMap.MyGlobalElements());
@@ -298,6 +300,7 @@ main(
       cout << ss.str();
   }
   sleep(delay);
+  */
 
   // Append the extra rows and columns to the list on processor 0.
   if (myRank == 0)
@@ -305,7 +308,7 @@ main(
     for (int i(0); i < newM; ++i)
     {
       myGlobalRowMapElements.push_back(newN + i);
-      myGlobalColMapElements.push_back(newN + i);
+//      myGlobalColMapElements.push_back(newN + i);
     }
   }
   ss = stringstream("");
@@ -326,24 +329,24 @@ main(
       cout << ss.str();
   }
   sleep(delay);
-  ss = stringstream("");
-  ss << "p" << myRank << ":  myGlobalColMapElements = {";
-  for (size_t i(0); i < myGlobalColMapElements.size(); ++i)
-  {
-    ss << myGlobalColMapElements[i];
-    if (i < myGlobalColMapElements.size() - 1)
-      ss << ", ";
-  }
-  ss << "} (size = " << myGlobalColMapElements.size() << ")" << endl;
-  if (myRank == 0)
-    cout << endl << "-----[ colMap ]------------------------------------------"
-         << endl << endl;
-  for (int i(0); i < numProcs; ++i)
-  {
-    if (myRank == i)
-      cout << ss.str();
-  }
-  sleep(delay);
+//  ss = stringstream("");
+//  ss << "p" << myRank << ":  myGlobalColMapElements = {";
+//  for (size_t i(0); i < myGlobalColMapElements.size(); ++i)
+//  {
+//    ss << myGlobalColMapElements[i];
+//    if (i < myGlobalColMapElements.size() - 1)
+//      ss << ", ";
+//  }
+//  ss << "} (size = " << myGlobalColMapElements.size() << ")" << endl;
+//  if (myRank == 0)
+//    cout << endl << "-----[ colMap ]------------------------------------------"
+//         << endl << endl;
+//  for (int i(0); i < numProcs; ++i)
+//  {
+//    if (myRank == i)
+//      cout << ss.str();
+//  }
+//  sleep(delay);
 
   // Create the new row and column maps.
   Epetra_Map newRowMap(-1, myGlobalRowMapElements.size(),
@@ -369,6 +372,7 @@ main(
 //  }
 //  sleep(delay);
 
+  /*
   // Need to figure out the number of entries per row from A00.
   Epetra_CrsGraph graph(A00.Graph());
   const int numLocalRows(rowMap.NumMyElements());
@@ -393,7 +397,9 @@ main(
       cout << ss.str();
   }
   sleep(delay);
+  */
 
+  /*
   // Add the number of entries per row from A01.
   for (int i(0); i < A01.NumVectors(); ++i)
     for (int j(0); j < numLocalRows; ++j)
@@ -417,6 +423,7 @@ main(
       cout << ss.str();
   }
   sleep(delay);
+  */
 
   // Add the number of entries per row from A10.
   // Loop over the vectors in the multivector; count the number in each one.
