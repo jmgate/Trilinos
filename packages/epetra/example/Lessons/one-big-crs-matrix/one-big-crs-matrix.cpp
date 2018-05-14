@@ -544,7 +544,7 @@ main(
     int colGID(ghostedA10.Map().GID(i));
     for (int j(0); j < ghostedA10.NumVectors(); ++j)
     {
-      int rowGID(A00.NumGlobalRows() + j);
+      int rowGID(newN + j);
       if (ghostedA10[j][i] != 0)
       {
         A.InsertGlobalValues(rowGID, 1, &ghostedA10[j][i], &colGID);
