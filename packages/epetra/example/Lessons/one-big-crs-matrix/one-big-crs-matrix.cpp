@@ -5,6 +5,7 @@
 #include <vector>
 #include <Epetra_config.h>
 #include <Epetra_CrsMatrix.h>
+#include <Epetra_Import.h>
 #include <Epetra_Map.h>
 #include <Epetra_MpiComm.h>
 #include <Epetra_Vector.h>
@@ -347,8 +348,8 @@ main(
   // Create the new row and column maps.
   Epetra_Map newRowMap(-1, myGlobalRowMapElements.size(),
     myGlobalRowMapElements.data(), indexBase, comm);
-  Epetra_Map newColMap(-1, myGlobalColMapElements.size(),
-    myGlobalColMapElements.data(), indexBase, comm);
+//  Epetra_Map newColMap(-1, myGlobalColMapElements.size(),
+//    myGlobalColMapElements.data(), indexBase, comm);
   if (myRank == 0)
     cout << endl << "-----[ newRowMap ]---------------------------------------"
          << endl << endl;
@@ -358,15 +359,15 @@ main(
       newRowMap.Print(cout);
   }
   sleep(delay);
-  if (myRank == 0)
-    cout << endl << "-----[ newColMap ]---------------------------------------"
-         << endl << endl;
-  for (int i(0); i < numProcs; ++i)
-  {
-    if (myRank == i)
-      newColMap.Print(cout);
-  }
-  sleep(delay);
+//  if (myRank == 0)
+//    cout << endl << "-----[ newColMap ]---------------------------------------"
+//         << endl << endl;
+//  for (int i(0); i < numProcs; ++i)
+//  {
+//    if (myRank == i)
+//      newColMap.Print(cout);
+//  }
+//  sleep(delay);
 
   // Need to figure out the number of entries per row from A00.
   Epetra_CrsGraph graph(A00.Graph());
@@ -417,9 +418,11 @@ main(
   }
   sleep(delay);
 
-  /*
   // Add the number of entries per row from A10.
+  // Loop over the vectors in the multivector; count the number in each one.
+  // Add one for the 11 block.
 
+  /*
   // Add the number of entries per row from A11.
   Epetra_BlockMap mapA11(A11.Map());
   const int numMyA11Rows(mapA11.NumMyElements());
@@ -457,7 +460,106 @@ main(
   sleep(delay);
   */
 
-  // Epetra_CrsMatrix A(Copy, newRowMap, newColMap, const int* numEntriesPerRow, true);
+  Epetra_Import importer(A00.RowMap(), A01.Map());
+  Epetra_MultiVector ghostedA01(A00.RowMap(), newM);
+  ghostedA01.Import(A01, importer, Add);
+  if (myRank == 0)
+    cout << endl << "-----[ ghostedA01 ]--------------------------------------"
+         << endl << endl;
+  ghostedA01.Print(cout);
+  sleep(delay);
+  // doing this such that the entries in A01 in rows that p1 ownes in the final matrix now exist on p1
+  //
+  Epetra_Map p0ownesAll(-1, (myRank == 0) ? A10.GlobalLength() : 0, 0, comm);
+  Epetra_MultiVector ghostedA10(p0ownesAll, A10.NumVectors());
+  Epetra_Import A10Importer(p0ownesAll, A10.Map());
+  ghostedA10.Import(A10, A10Importer, Add);
+  if (myRank == 0)
+    cout << endl << "-----[ ghostedA10 ]--------------------------------------"
+         << endl << endl;
+  ghostedA10.Print(cout);
+  sleep(delay);
+
+  Epetra_Map p0ownesA11(-1, (myRank == 0) ? A11.GlobalLength() : 0, 0, comm);
+  Epetra_MultiVector ghostedA11(p0ownesA11, A11.NumVectors());
+  Epetra_Import A11Importer(p0ownesA11, A11.Map());
+  ghostedA11.Import(A11, A11Importer, Add);
+  if (myRank == 0)
+    cout << endl << "-----[ ghostedA11 ]--------------------------------------"
+         << endl << endl;
+  ghostedA11.Print(cout);
+  sleep(delay);
+
+//  Epetra_CrsMatrix A(Copy, newRowMap, newColMap, 0); // change this to use numEntriesPerRow, true later.
+  Epetra_CrsMatrix A(Copy, newRowMap, 0); // change this to use numEntriesPerRow, true later.
+  if (myRank == 0)
+    cout << endl << "-----[ A ]-----------------------------------------------"
+         << endl << endl;
+  A.Print(cout);
+  sleep(delay);
+
+  vector<double> values(A00.MaxNumEntries());
+  vector<int> indices(A00.MaxNumEntries());
+  for (int i(0); i < A00.NumMyRows(); ++i)
+  {
+    int numEntries;
+    int rowID(A00.RowMap().GID(i));
+    A00.ExtractGlobalRowCopy(rowID, A00.MaxNumEntries(), numEntries, values.data(), indices.data());
+    A.InsertGlobalValues(rowID, numEntries, values.data(), indices.data());
+  }
+  if (myRank == 0)
+    cout << endl << "-----[ after A00 ]---------------------------------------"
+         << endl << endl;
+  A.Print(cout);
+  sleep(delay);
+
+  for (int i(0); i < ghostedA01.MyLength(); ++i)
+  {
+    int rowID(ghostedA01.Map().GID(i));
+    for (int j(0); j < ghostedA01.NumVectors(); ++j)
+    {
+      if (ghostedA01[j][i] != 0)
+      {
+        int index(j + newN);
+        A.InsertGlobalValues(rowID, 1, &ghostedA01[j][i], &index);
+        cout << "Insert " << rowID << "; p" << myRank << "; index " << index << endl;
+      }
+    }
+  }
+  if (myRank == 0)
+    cout << endl << "-----[ after A01 ]---------------------------------------"
+         << endl << endl;
+  A.Print(cout);
+  sleep(delay);
+
+  for (int i(0); i < ghostedA10.MyLength(); ++i)
+  {
+    int colID(ghostedA10.Map().GID(i));
+    for (int j(0); j < ghostedA10.NumVectors(); ++j)
+    {
+      if (ghostedA10[j][i] != 0)
+      {
+        A.InsertGlobalValues(A00.NumGlobalRows() + j, 1, &ghostedA10[j][i], &colID);
+        cout << "Insert " << A00.NumGlobalRows() + j << "; p" << myRank << "; colID " << colID << endl;
+      }
+    }
+  }
+  if (myRank == 0)
+    cout << endl << "-----[ after A10 ]---------------------------------------"
+         << endl << endl;
+  A.Print(cout);
+  sleep(delay);
+
+
+  for (int i(0); i < ghostedA11.MyLength(); ++i)
+  {
+    // Left out second loop because our use case is diagonal.  Need it in general though.
+    int rowID(newN + i);
+    A.InsertGlobalValues(rowID, 1, &ghostedA11[i][i], &rowID);
+    cout << "Insert " << rowID << "; p" << myRank << endl;
+  }
+  A.Print(cout);
+  sleep(delay);
 
   /////////////////////////////////////////////////////////////////////////////
   //
