@@ -74,7 +74,7 @@ namespace Impl{
   typename cin_nonzero_index_view_type,
   typename cin_nonzero_value_view_type>
   void viennaCL_apply(
-      KernelHandle *handle,
+      KernelHandle * handle,
       typename KernelHandle::nnz_lno_t m,
       typename KernelHandle::nnz_lno_t n,
       typename KernelHandle::nnz_lno_t k,
@@ -205,6 +205,13 @@ namespace Impl{
       throw std::runtime_error ("VIENNACL requires local ordinals to be integer.\n");
     }
 #else
+    (void)handle;
+    (void)m;          (void)n;          (void)k;
+    (void)row_mapA;   (void)row_mapB;   (void)row_mapC;
+    (void)entriesA;   (void)entriesB;   (void)entriesC;
+    (void)valuesA;    (void)valuesB;    (void)valuesC;
+    (void)transposeA; (void)transposeB;
+    (void)verbose;
     throw std::runtime_error ("VIENNACL IS NOT DEFINED\n");
     //return;
 #endif

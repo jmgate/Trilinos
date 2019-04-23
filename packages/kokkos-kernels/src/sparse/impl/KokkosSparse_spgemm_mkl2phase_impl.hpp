@@ -66,7 +66,7 @@ typename bin_row_index_view_type,
 typename bin_nonzero_index_view_type,
 typename cin_row_index_view_type>
 void mkl2phase_symbolic(
-    KernelHandle *handle,
+    KernelHandle * handle,
     typename KernelHandle::nnz_lno_t m,
     typename KernelHandle::nnz_lno_t n,
     typename KernelHandle::nnz_lno_t k,
@@ -272,6 +272,12 @@ void mkl2phase_symbolic(
     throw std::runtime_error ("MKL requires local ordinals to be integer.\n");
   }
 #else
+  (void)handle;
+  (void)m;          (void)n;          (void)k;
+  (void)row_mapA;   (void)row_mapB;   (void)row_mapC;
+  (void)entriesA;   (void)entriesB;
+  (void)transposeA; (void)transposeB;
+  (void)verbose;
   throw std::runtime_error ("MKL IS NOT DEFINED\n");
 #endif
 }
@@ -288,7 +294,7 @@ void mkl2phase_symbolic(
   typename cin_nonzero_index_view_type,
   typename cin_nonzero_value_view_type>
   void mkl2phase_apply(
-      KernelHandle *handle,
+      KernelHandle * handle,
       typename KernelHandle::nnz_lno_t m,
       typename KernelHandle::nnz_lno_t n,
       typename KernelHandle::nnz_lno_t k,
@@ -544,6 +550,13 @@ void mkl2phase_symbolic(
       throw std::runtime_error ("MKL requires local ordinals to be integer.\n");
     }
 #else
+  (void)handle;
+  (void)m;          (void)n;          (void)k;
+  (void)row_mapA;   (void)row_mapB;   (void)row_mapC;
+  (void)entriesA;   (void)entriesB;   (void)entriesC;
+  (void)valuesA;    (void)valuesB;    (void)valuesC;
+  (void)transposeA; (void)transposeB;
+  (void)verbose;
     throw std::runtime_error ("MKL IS NOT DEFINED\n");
 #endif
   } // end mkl2phase_apply

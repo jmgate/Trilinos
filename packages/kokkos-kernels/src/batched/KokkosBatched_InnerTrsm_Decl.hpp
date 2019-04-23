@@ -22,9 +22,9 @@ namespace KokkosBatched {
       // trisolve
       template<typename ValueType>
       KOKKOS_INLINE_FUNCTION
-      int serial_invoke(const ValueType *__restrict__ A,
-			const int n,
-			/**/  ValueType *__restrict__ B);
+      int serial_invoke(const ValueType *__restrict__ /* A */,
+			const int /* n */,
+			/**/  ValueType *__restrict__ /* B */);
 
       // for remainder
       template<typename ValueType>
@@ -76,9 +76,9 @@ namespace KokkosBatched {
       // trisolve
       template<typename ValueType>
       KOKKOS_INLINE_FUNCTION
-      int serial_invoke(const ValueType *__restrict__ A,
-			const int n,
-			/**/  ValueType *__restrict__ B);
+      int serial_invoke(const ValueType *__restrict__ /* A */,
+			const int /* n */,
+			/**/  ValueType *__restrict__ /* B */);
 
       // for remainder
       template<typename ValueType>

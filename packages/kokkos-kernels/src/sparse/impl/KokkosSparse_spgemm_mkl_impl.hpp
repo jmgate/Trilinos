@@ -66,7 +66,7 @@ typename bin_row_index_view_type,
 typename bin_nonzero_index_view_type,
 typename cin_row_index_view_type>
 void mkl_symbolic(
-    KernelHandle *handle,
+    KernelHandle * handle,
     typename KernelHandle::nnz_lno_t m,
     typename KernelHandle::nnz_lno_t n,
     typename KernelHandle::nnz_lno_t k,
@@ -351,6 +351,12 @@ void mkl_symbolic(
     return;
   }
 #else
+  (void)handle;
+  (void)m;          (void)n;          (void)k;
+  (void)row_mapA;   (void)row_mapB;   (void)row_mapC;
+  (void)entriesA;   (void)entriesB;
+  (void)transposeA; (void)transposeB;
+  (void)verbose;
   throw std::runtime_error ("MKL IS NOT DEFINED\n");
   //return;
 #endif
@@ -369,7 +375,7 @@ void mkl_symbolic(
   typename cin_nonzero_index_view_type,
   typename cin_nonzero_value_view_type>
   void mkl_apply(
-      KernelHandle *handle,
+      KernelHandle * handle,
       typename KernelHandle::nnz_lno_t m,
       typename KernelHandle::nnz_lno_t n,
       typename KernelHandle::nnz_lno_t k,
@@ -657,6 +663,13 @@ void mkl_symbolic(
       return;
     }
 #else
+    (void)handle;
+    (void)m;          (void)n;          (void)k;
+    (void)row_mapA;   (void)row_mapB;   (void)row_mapC;
+    (void)entriesA;   (void)entriesB;   (void)entriesC;
+    (void)valuesA;    (void)valuesB;    (void)valuesC;
+    (void)transposeA; (void)transposeB;
+    (void)verbose;
     throw std::runtime_error ("MKL IS NOT DEFINED\n");
     //return;
 #endif
