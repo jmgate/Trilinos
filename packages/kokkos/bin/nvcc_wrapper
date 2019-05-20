@@ -101,8 +101,23 @@ remove_duplicate_link_files=0
 
 #echo "Arguments: $# $@"
 
+all_used_args=""
+
 while [ $# -gt 0 ]
 do
+  dup_found=0
+  for used in $all_used_args
+  do
+    if [ "$used" == "$1" ]; then
+      echo "Removing duplicate $1"
+      dup_found=1
+    fi
+  done
+  all_used_args="$all_used_args $1"
+  if [ $dup_found == 1 ]; then
+    shift
+    continue
+  fi
   case $1 in
   #show the executed command
   --show|--nvcc-wrapper-show)
