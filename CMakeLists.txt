@@ -1,4 +1,3 @@
-# @HEADER
 # ************************************************************************
 #
 #            Trilinos: An Object-Oriented Solver Framework
