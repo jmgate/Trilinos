@@ -64,6 +64,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   Kokkos                packages/kokkos                   PT
   Teuchos               packages/teuchos                  PT
   KokkosKernels         packages/kokkos-kernels           PT
+  Compadre              packages/compadre                 EX
   RTOp                  packages/rtop                     PT
   Sacado                packages/sacado                   PT
   MiniTensor            packages/minitensor               PT
